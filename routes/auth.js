@@ -1,7 +1,6 @@
 const router = require("express").Router();
 const registerValidation = require("../validation").registerValidation;
 const loginValidation = require("../validation").loginValidation;
-const courseValidation = require("../validation").courseValidation;
 const User = require("../models").user;
 const jwt = require("jsonwebtoken");
 
@@ -50,8 +49,13 @@ router.post("/login", async (req, res) => {
     if (err) return res.status(500).send(err);
     if (isMatch) {
       //製作json web token
-      const tokenObject = { _id: foundUser._id, email: foundUser.email };
-      const token = jwt.sign(tokenObject, process.env.PASSPORT_SECRET);
+      const tokenObject = {
+        _id: foundUser._id,
+        email: foundUser.email,
+      };
+      const token = jwt.sign(tokenObject, process.env.PASSPORT_SECRET, {
+        expiresIn: "30m",
+      });
       return res.send({
         msg: "成功登入",
         token: "JWT " + token,

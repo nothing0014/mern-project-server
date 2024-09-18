@@ -8,10 +8,14 @@ const courseRoute = require("./routes").courseRoute;
 const passport = require("passport");
 require("./config/passport")(passport);
 const cors = require("cors");
+const dbUrl =
+  process.env.NODE_ENV === "production"
+    ? process.env.MONGODB_CONNECTION_PRODUCTION
+    : process.env.MONGODB_CONNECTION_LOCAL;
 
 //連結MongoDB
 mongoose
-  .connect(process.env.MONGODB_CONNECTION)
+  .connect(dbUrl)
   .then(() => {
     console.log("連結mongodb...");
   })
@@ -37,3 +41,5 @@ app.use(
 app.listen(8080, () => {
   console.log("後端伺服器聆聽在port 8080...");
 });
+
+process.env.NODE_ENV;
