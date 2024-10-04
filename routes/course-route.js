@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const Course = require("../models/course-model");
 const courseValidation = require("../validation").courseValidation;
+const { sendToStudents } = require("../ws-manager"); // 引入 WebSocket 管理器
 
 router.use((req, res, next) => {
   console.log("course route正在接受一個request...");
@@ -149,6 +150,7 @@ router.patch("/:courseID", async (req, res) => {
     }
     //使用者必須是此課程講師才能修改此課程
     if (foundCourse.instructor.equals(req.user._id)) {
+      const oldTitle = foundCourse.title;
       let updatedCourse = await Course.findOneAndUpdate(
         { _id: courseID },
         req.body,
@@ -157,12 +159,24 @@ router.patch("/:courseID", async (req, res) => {
           runValidators: true,
         }
       );
+      if (updatedCourse.students.length > 0) {
+        // 準備發送給學生的消息
+        const message = JSON.stringify({
+          action: "courseUpdated",
+          courseId: updatedCourse._id,
+          title: oldTitle,
+          newtitle: updatedCourse.title,
+        });
+        // 向註冊該課程的所有學生發送 WebSocket 消息
+        sendToStudents(updatedCourse.students, message);
+      }
+
       return res.send({ message: "課程已經被修改", updatedCourse });
     } else {
       return res.status(403).send("只有此課程講師才能編輯課程。");
     }
   } catch (e) {
-    return res.status(500).send(e);
+    return res.status(500).send("發生錯誤");
   }
 });
 
@@ -172,7 +186,6 @@ router.patch("/dropOut/:courseID", async (req, res) => {
   try {
     let { courseID } = req.params;
     let foundCourse = await Course.findOne({ _id: courseID }).exec();
-    console.log("正在取消註冊課程...");
     if (!foundCourse) {
       return res.status(400).send("找不到該課程");
     }
