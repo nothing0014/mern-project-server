@@ -8,6 +8,8 @@ const courseRoute = require("./routes").courseRoute;
 const passport = require("passport");
 require("./config/passport")(passport);
 const cors = require("cors");
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocument = require("./swagger.json"); // Import the JSON file
 
 const dbUrl =
   process.env.NODE_ENV === "production"
@@ -23,6 +25,9 @@ mongoose
   .catch((e) => {
     console.log(e);
   });
+
+// Serve the Swagger documentation
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 //middlewares
 app.use(express.json());

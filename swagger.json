@@ -1,0 +1,254 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "選課系統",
+    "description": "本伺服器使用 Express 搭建，作為「選課系統」的後端，相應的 API 分別是 auth 和 course-route 兩部份。auth負責 login 和 signup ；而course-route的路由都須要 token 驗證。"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "本地伺服器"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "登入跟註冊相關"
+    },
+    {
+      "name": "Course",
+      "description": "課程相關"
+    }
+  ],
+  "paths": {
+    "/api/user/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "註冊新使用者",
+        "description": "Creates a new user with email, username, password, and role.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User successfully registered"
+          },
+          "400": {
+            "description": "Invalid input or email already registered"
+          }
+        }
+      }
+    },
+    "/api/user/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login a user",
+        "description": "Authenticates a user with email and password.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful, returns JWT token"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/api/courses": {
+      "get": {
+        "tags": ["Course"],
+        "summary": "Get all courses",
+        "description": "Fetch all courses from the system.",
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the list of courses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "foundCourses": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Course"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Course"],
+        "summary": "Create a new course",
+        "description": "Allows instructors to create a new course.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Course"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully created the course"
+          },
+          "400": {
+            "description": "Invalid course data"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/courses/{courseID}": {
+      "get": {
+        "tags": ["Course"],
+        "summary": "Get a course by ID",
+        "description": "Fetch a course by its ID.",
+        "parameters": [
+          {
+            "name": "courseID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the course"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the course",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Course"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Course not found"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Course"],
+        "summary": "Update a course",
+        "description": "Allows instructors to update the course information.",
+        "parameters": [
+          {
+            "name": "courseID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the course to be updated"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Course"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Course updated successfully"
+          },
+          "403": {
+            "description": "Unauthorized - Only instructors can update the course"
+          },
+          "400": {
+            "description": "Invalid course data"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Course": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "instructor": {
+            "type": "string"
+          },
+          "students": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}
