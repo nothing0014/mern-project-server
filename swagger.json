@@ -1,114 +1,123 @@
 {
   "openapi": "3.0.0",
   "info": {
+    "title": "API Documentation",
     "version": "1.0.0",
-    "title": "選課系統",
-    "description": "本伺服器使用 Express 搭建，作為「選課系統」的後端，相應的 API 分別是 auth 和 course-route 兩部份。auth負責 login 和 signup ；而course-route的路由都須要 token 驗證。"
+    "description": "This is the API documentation for auth and course routes."
   },
-  "servers": [
-    {
-      "url": "http://localhost:8080",
-      "description": "本地伺服器"
-    }
-  ],
-  "tags": [
-    {
-      "name": "Auth",
-      "description": "登入跟註冊相關"
-    },
-    {
-      "name": "Course",
-      "description": "課程相關"
-    }
-  ],
   "paths": {
     "/api/user/register": {
       "post": {
-        "tags": ["Auth"],
-        "summary": "註冊新使用者",
-        "description": "Creates a new user with email, username, password, and role.",
+        "summary": "Register a new user",
+        "tags": ["auth"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "type": "string"
-                  },
-                  "username": {
-                    "type": "string"
-                  },
-                  "password": {
-                    "type": "string"
-                  },
-                  "role": {
-                    "type": "string"
-                  }
-                }
+                "$ref": "#/components/schemas/RegisterUser"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "User successfully registered"
+            "description": "User successfully registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "msg": {
+                      "type": "string",
+                      "example": "使用者已被儲存。"
+                    },
+                    "savedUser": {
+                      "$ref": "#/components/schemas/UserBase"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
-            "description": "Invalid input or email already registered"
+            "description": "Invalid input"
           }
         }
       }
     },
     "/api/user/login": {
       "post": {
-        "tags": ["Auth"],
-        "summary": "Login a user",
-        "description": "Authenticates a user with email and password.",
+        "summary": "Login user",
+        "tags": ["auth"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "type": "string"
-                  },
-                  "password": {
-                    "type": "string"
-                  }
-                }
+                "$ref": "#/components/schemas/LoginUser"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Login successful, returns JWT token"
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "msg": {
+                      "type": "string",
+                      "example": "成功登入"
+                    },
+                    "token": {
+                      "type": "string",
+                      "example": "JWT eyJhbGciOiJIUzI1NiIsInR..."
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/UserBase"
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Invalid credentials"
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "Invalid email or password"
+                }
+              }
+            }
           }
         }
       }
     },
     "/api/courses": {
       "get": {
-        "tags": ["Course"],
         "summary": "Get all courses",
-        "description": "Fetch all courses from the system.",
+        "tags": ["courses"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved the list of courses",
+            "description": "Course list",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "message": {
-                      "type": "string"
+                      "type": "string",
+                      "example": "以下為課程列表"
                     },
                     "foundCourses": {
                       "type": "array",
@@ -121,104 +130,16 @@
               }
             }
           },
-          "500": {
-            "description": "Server error"
-          }
-        }
-      },
-      "post": {
-        "tags": ["Course"],
-        "summary": "Create a new course",
-        "description": "Allows instructors to create a new course.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Course"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successfully created the course"
-          },
-          "400": {
-            "description": "Invalid course data"
-          },
-          "500": {
-            "description": "Server error"
-          }
-        }
-      }
-    },
-    "/api/courses/{courseID}": {
-      "get": {
-        "tags": ["Course"],
-        "summary": "Get a course by ID",
-        "description": "Fetch a course by its ID.",
-        "parameters": [
-          {
-            "name": "courseID",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The ID of the course"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved the course",
+          "401": {
+            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Course"
+                  "type": "string",
+                  "example": "JWT Token missing or invalid"
                 }
               }
             }
-          },
-          "400": {
-            "description": "Course not found"
-          }
-        }
-      },
-      "patch": {
-        "tags": ["Course"],
-        "summary": "Update a course",
-        "description": "Allows instructors to update the course information.",
-        "parameters": [
-          {
-            "name": "courseID",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The ID of the course to be updated"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Course"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Course updated successfully"
-          },
-          "403": {
-            "description": "Unauthorized - Only instructors can update the course"
-          },
-          "400": {
-            "description": "Invalid course data"
           }
         }
       }
@@ -226,20 +147,79 @@
   },
   "components": {
     "schemas": {
+      "UserBase": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "example@example.com"
+          },
+          "username": {
+            "type": "string",
+            "example": "JohnDoe"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123"
+          },
+          "role": {
+            "type": "string",
+            "example": "student"
+          }
+        }
+      },
+      "RegisterUser": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/UserBase"
+          },
+          {
+            "type": "object",
+            "required": ["email", "username", "password", "role"]
+          }
+        ]
+      },
+      "LoginUser": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "example@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123"
+          }
+        },
+        "required": ["email", "password"]
+      },
       "Course": {
         "type": "object",
         "properties": {
           "title": {
-            "type": "string"
+            "type": "string",
+            "example": "Introduction to Programming"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "example": "Learn the basics of programming."
           },
           "price": {
-            "type": "number"
+            "type": "number",
+            "example": 99.99
           },
           "instructor": {
-            "type": "string"
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string",
+                "example": "InstructorName"
+              },
+              "email": {
+                "type": "string",
+                "example": "instructor@example.com"
+              }
+            }
           },
           "students": {
             "type": "array",
@@ -248,6 +228,13 @@
             }
           }
         }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   }

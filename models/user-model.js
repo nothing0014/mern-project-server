@@ -14,6 +14,7 @@ const userSchema = new Schema({
     required: true,
     minlength: 6,
     maxlength: 50,
+    unique: true,
   },
   password: {
     type: String,
@@ -60,5 +61,9 @@ userSchema.pre("save", async function (next) {
   }
   next();
 });
+
+// 為 email 和 username 欄位建立index
+userSchema.index({ email: 1 });
+userSchema.index({ username: 1 });
 
 module.exports = mongoose.model("User", userSchema);

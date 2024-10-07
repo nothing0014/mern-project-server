@@ -5,7 +5,11 @@ const User = require("../models/user-model");
 
 module.exports = (passport) => {
   let opts = {};
-  opts.jwtFromRequest = ExtractJwt.fromAuthHeaderWithScheme("jwt");
+  // opts.jwtFromRequest = ExtractJwt.fromAuthHeaderWithScheme("jwt");
+  opts.jwtFromRequest = ExtractJwt.fromExtractors([
+    ExtractJwt.fromAuthHeaderAsBearerToken(),
+    ExtractJwt.fromAuthHeaderWithScheme("jwt"),
+  ]);
   opts.secretOrKey = process.env.PASSPORT_SECRET;
   passport.use(
     new JwtStrategy(opts, async function (jwt_payload, done) {
